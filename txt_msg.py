@@ -9,7 +9,7 @@ import os
 load_dotenv()
 # Gmail account credentials
 GMAIL_USER = 'arsanyattalla26@gmail.com'
-GMAIL_PASSWORD = 'omdrveqoztfxrrti'
+GMAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
 RECIPIENT_EMAIL = 'arsanyattalla10@gmail.com'
 
 def send_email():
@@ -39,8 +39,7 @@ def send_email():
 
 # Send email every hour
 try:
-    while True:
-        send_email()
-        time.sleep(30)  # Wait for 1 hour (3600 seconds)
+    send_email()
+    time.sleep(30)  
 except KeyboardInterrupt:
     print("Process interrupted.")
