@@ -18,7 +18,6 @@ def send_email():
     msg['From'] = 'Arsany Attalla'
     msg['To'] = RECIPIENT_EMAIL
     msg['Subject'] = 'Automated Hourly Email'
-    print(GMAIL_PASSWORD)
 
     # Email content
     body = "Hello! This is an automated email sent every hour."
