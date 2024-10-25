@@ -2,8 +2,8 @@ name: Send Email Workflow
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Runs at the start of every hour
-  workflow_dispatch:  # Allows manual trigger from the GitHub UI
+    - cron: '0 * * * *'  
+  workflow_dispatch:  
   push:
     branches:
       - main
@@ -29,6 +29,6 @@ jobs:
       - name: Send Email
         env:
           GMAIL_USER: 'arsanyattalla26@gmail.com'
-          GMAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}  # Using the secret here
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}  
         run: |
-          python txt_msg.py  # Replace with the actual name of your script
+          python txt_msg.py  
