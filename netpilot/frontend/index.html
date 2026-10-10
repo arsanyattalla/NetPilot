@@ -1,0 +1,2095 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090d16">
+  <title>NetPilot — Network Intelligence</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    :root {
+      --bg: #090d16;
+      --sidebar: #0c111d;
+      --panel: #111827;
+      --panel2: #151e2e;
+      --border: #222d40;
+      --text: #edf3fc;
+      --muted: #8997ad;
+      --blue: #6ca8ff;
+      --cyan: #5eead4;
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --red: #fb7185;
+      --radius: 15px;
+    }
+
+    html { scroll-behavior: smooth; scroll-padding-top: 25px; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 55% -15%, #162744 0%, transparent 48%),
+        var(--bg);
+      color: var(--text);
+      font: 14px/1.5 Inter, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", sans-serif;
+    }
+
+    button, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; text-decoration: none; }
+    .muted { color: var(--muted); }
+    .green { color: var(--green); }
+    .blue { color: var(--blue); }
+    .yellow { color: var(--yellow); }
+    .red { color: var(--red); }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 235px minmax(0, 1fr);
+    }
+
+    /* Sidebar */
+
+    .sidebar {
+      background: rgba(10, 15, 26, .94);
+      border-right: 1px solid var(--border);
+      padding: 25px 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      padding: 0 10px;
+    }
+
+    .brand-icon {
+      width: 39px;
+      height: 39px;
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(145deg, #3579e9, #2453b5);
+      color: white;
+      font-size: 21px;
+      box-shadow: 0 5px 22px #2563eb35;
+    }
+
+    .brand-name {
+      font-size: 18px;
+      font-weight: 850;
+      letter-spacing: 1.1px;
+    }
+
+    .brand-name span { color: var(--blue); }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 10px;
+      letter-spacing: .6px;
+    }
+
+    .nav-label {
+      padding: 0 12px;
+      margin-bottom: 10px;
+      color: #63718a;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+
+    .nav {
+      display: grid;
+      gap: 5px;
+    }
+
+    .nav a {
+      min-height: 43px;
+      padding: 11px 13px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: #98a7bc;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      transition: .2s ease;
+    }
+
+    .nav a:hover {
+      background: #151f30;
+      color: white;
+    }
+
+    .nav a.active {
+      background: linear-gradient(100deg, #19325a, #14243d);
+      border-color: #294873;
+      color: #dceaff;
+    }
+
+    .nav-icon {
+      width: 20px;
+      text-align: center;
+      font-size: 17px;
+    }
+
+    .nav-count {
+      margin-left: auto;
+      padding: 2px 7px;
+      border-radius: 6px;
+      color: #fbbf24;
+      background: #fbbf2417;
+      font-size: 11px;
+    }
+
+    .sidebar-bottom {
+      margin-top: auto;
+      padding: 16px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #111827;
+    }
+
+    .side-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .side-status .dot { background: var(--green); }
+
+    .sidebar-bottom p {
+      color: var(--muted);
+      font-size: 11px;
+      margin: 9px 0 0;
+      line-height: 1.7;
+    }
+
+    .dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex-shrink: 0;
+    }
+
+    /* Main layout */
+
+    .main { min-width: 0; }
+
+    .topbar {
+      min-height: 76px;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      border-bottom: 1px solid var(--border);
+      background: #0c121edb;
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+
+    .breadcrumb {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 3px;
+    }
+
+    .top-title {
+      font-size: 17px;
+      font-weight: 750;
+      letter-spacing: -.3px;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .api-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 11px;
+      background: #11251f;
+      border: 1px solid #214536;
+      border-radius: 9px;
+      color: var(--green);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .api-status.error {
+      background: #301920;
+      border-color: #5d2936;
+      color: var(--red);
+    }
+
+    .refresh-btn, .primary-btn, .secondary-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid #315e9e;
+      background: #2456a2;
+      color: white;
+      padding: 10px 14px;
+      border-radius: 9px;
+      font-size: 12px;
+      font-weight: 700;
+      transition: .2s ease;
+    }
+
+    .refresh-btn:hover, .primary-btn:hover {
+      background: #316dc5;
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      opacity: .55;
+      cursor: wait;
+      transform: none !important;
+    }
+
+    .secondary-btn {
+      background: #172235;
+      border-color: var(--border);
+      color: #cbd7e8;
+    }
+
+    .secondary-btn:hover { background: #202d42; }
+
+    .content {
+      max-width: 1750px;
+      margin: 0 auto;
+      padding: 30px 32px 42px;
+    }
+
+    .page-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+
+    .eyebrow {
+      color: var(--blue);
+      text-transform: uppercase;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 1.8px;
+      margin-bottom: 8px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    .page-heading h1 {
+      font-size: clamp(25px, 3vw, 32px);
+      letter-spacing: -1.1px;
+      margin: 0 0 7px;
+      font-weight: 780;
+    }
+
+    .page-heading p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .date-label {
+      color: #9aabc2;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    /* Cards */
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    .metric-card, .panel {
+      min-width: 0;
+      background: linear-gradient(145deg, #141e2e, #101725);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 8px 30px #00000012;
+    }
+
+    .metric-card {
+      position: relative;
+      overflow: hidden;
+      padding: 20px;
+      transition: border-color .2s, transform .2s;
+    }
+
+    .metric-card:hover {
+      border-color: #3a4c68;
+      transform: translateY(-2px);
+    }
+
+    .metric-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .metric-label {
+      color: #a5b3c8;
+      font-size: 12px;
+      font-weight: 550;
+    }
+
+    .metric-icon {
+      width: 35px;
+      height: 35px;
+      display: grid;
+      place-items: center;
+      border-radius: 10px;
+      font-size: 17px;
+      background: #60a5fa14;
+      color: var(--blue);
+    }
+
+    .metric-icon.green-bg { color: var(--green); background: #4ade8014; }
+    .metric-icon.yellow-bg { color: var(--yellow); background: #fbbf2414; }
+    .metric-icon.red-bg { color: var(--red); background: #fb718514; }
+
+    .metric-value {
+      font-size: clamp(27px, 3vw, 34px);
+      font-weight: 800;
+      letter-spacing: -1.3px;
+      margin: 15px 0 4px;
+      line-height: 1.2;
+    }
+
+    .metric-foot {
+      color: #8190a7;
+      font-size: 11px;
+    }
+
+    .metric-foot strong { color: #b5c5db; font-weight: 600; }
+
+    .metric-line {
+      position: absolute;
+      height: 2px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(90deg, #60a5fa80, transparent);
+    }
+
+    /* Sections */
+
+    .two-col {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(300px, .85fr);
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .panel { padding: 22px; margin-bottom: 18px; }
+
+    .two-col .panel { margin-bottom: 0; }
+
+    .panel-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .panel-heading h2 {
+      font-size: 14px;
+      font-weight: 750;
+      margin: 0 0 5px;
+      letter-spacing: -.15px;
+    }
+
+    .panel-heading p {
+      color: var(--muted);
+      font-size: 11px;
+      margin: 0;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--border);
+      background: #182337;
+      border-radius: 7px;
+      padding: 6px 9px;
+      color: #b7c6db;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .tag .dot { width: 6px; height: 6px; }
+
+    /* Device list */
+
+    .device {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      padding: 15px 0;
+      border-bottom: 1px solid #202b3d;
+    }
+
+    .device:last-child { border-bottom: 0; }
+
+    .device-icon {
+      flex-shrink: 0;
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 11px;
+      background: #1b2b42;
+      color: var(--blue);
+      font-size: 19px;
+    }
+
+    .device-main { flex: 1; min-width: 0; }
+
+    .device-name {
+      font-size: 12px;
+      font-weight: 750;
+      margin-bottom: 4px;
+    }
+
+    .device-meta {
+      color: var(--muted);
+      font-size: 11px;
+      overflow-wrap: anywhere;
+    }
+
+    .device-right {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 10px;
+      font-weight: 750;
+      background: #183227;
+      color: var(--green);
+    }
+
+    .status-pill.offline {
+      background: #351b26;
+      color: var(--red);
+    }
+
+    .status-pill.unknown {
+      background: #30291b;
+      color: var(--yellow);
+    }
+
+    .health-mini {
+      color: #a7b6cb;
+      font-size: 10px;
+      margin-top: 7px;
+    }
+
+    .panel-footer {
+      padding-top: 14px;
+      margin-top: 4px;
+      border-top: 1px solid #202b3d;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    /* Health visualization */
+
+    .health-layout {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      margin: 22px 0;
+    }
+
+    .gauge {
+      width: 130px;
+      height: 130px;
+      flex-shrink: 0;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      background: conic-gradient(
+        var(--green) var(--health-angle, 0deg),
+        #263246 0deg
+      );
+      position: relative;
+    }
+
+    .gauge::before {
+      content: "";
+      position: absolute;
+      inset: 9px;
+      background: #121b2a;
+      border-radius: 50%;
+      border: 1px solid #253249;
+    }
+
+    .gauge-center {
+      position: relative;
+      text-align: center;
+    }
+
+    .gauge-number {
+      font-size: 31px;
+      font-weight: 800;
+      letter-spacing: -1px;
+    }
+
+    .gauge-label {
+      color: var(--muted);
+      font-size: 10px;
+    }
+
+    .health-copy { min-width: 0; }
+
+    .health-copy h3 {
+      font-size: 15px;
+      margin-bottom: 7px;
+    }
+
+    .health-copy p {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .health-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .health-stat {
+      padding: 12px;
+      background: #0d1523;
+      border: 1px solid #202c40;
+      border-radius: 10px;
+    }
+
+    .health-stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      margin-bottom: 7px;
+    }
+
+    .health-stat strong {
+      font-size: 18px;
+      letter-spacing: -.5px;
+    }
+
+    /* Diagnostics and alerts */
+
+    .issue {
+      border: 1px solid #403722;
+      border-left: 3px solid var(--yellow);
+      border-radius: 9px;
+      background: #191f2b;
+      padding: 14px;
+      margin-top: 10px;
+      overflow-wrap: anywhere;
+    }
+
+    .issue:first-child { margin-top: 0; }
+    .issue.critical { border-color: #4b2933; border-left-color: var(--red); }
+    .issue.info { border-color: #253e5d; border-left-color: var(--blue); }
+
+    .issue-title {
+      font-size: 12px;
+      font-weight: 750;
+      margin-bottom: 7px;
+    }
+
+    .issue p {
+      color: #aab8cb;
+      font-size: 11px;
+      line-height: 1.7;
+      margin: 4px 0 0;
+    }
+
+    .empty-state {
+      padding: 26px 14px;
+      text-align: center;
+      border: 1px dashed #2b384d;
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .empty-icon {
+      display: block;
+      font-size: 23px;
+      margin-bottom: 9px;
+      opacity: .8;
+    }
+
+    /* Tables */
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      text-align: left;
+    }
+
+    th {
+      color: #8797af;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .65px;
+      background: #0d1522;
+    }
+
+    th, td {
+      padding: 14px 13px;
+      border-bottom: 1px solid #202b3d;
+      white-space: nowrap;
+    }
+
+    td { color: #c3cee0; }
+    tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: #ffffff04; }
+
+    /* AI assistant */
+
+    .ai-panel {
+      position: relative;
+      overflow: hidden;
+      border-color: #2b4162;
+      background:
+        radial-gradient(ellipse at 100% 0%, #1c3b6a35, transparent 45%),
+        linear-gradient(145deg, #131f31, #101725);
+    }
+
+    .ai-heading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .ai-icon {
+      width: 43px;
+      height: 43px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #3978db, #5144b8);
+      box-shadow: 0 5px 22px #3b66c92a;
+      font-size: 20px;
+    }
+
+    .ai-heading h2 {
+      margin: 0 0 4px;
+      font-size: 15px;
+    }
+
+    .ai-heading p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .ai-badge {
+      margin-left: auto;
+      color: #9bc3ff;
+      background: #24416a60;
+      border: 1px solid #335582;
+      border-radius: 7px;
+      padding: 6px 9px;
+      font-size: 10px;
+      white-space: nowrap;
+    }
+
+    .suggestions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 20px 0 12px;
+    }
+
+    .suggestion {
+      border: 1px solid #2a3b54;
+      background: #182438;
+      color: #b9cce5;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      transition: .2s;
+    }
+
+    .suggestion:hover {
+      border-color: #5284c9;
+      color: white;
+    }
+
+    .ai-input-wrap {
+      border: 1px solid #30425c;
+      border-radius: 12px;
+      padding: 10px;
+      background: #0b1220;
+      transition: border-color .2s;
+    }
+
+    .ai-input-wrap:focus-within { border-color: #5489d2; }
+
+    textarea {
+      display: block;
+      width: 100%;
+      min-height: 85px;
+      resize: vertical;
+      border: 0;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      padding: 8px;
+      font-size: 12px;
+      line-height: 1.7;
+    }
+
+    textarea::placeholder { color: #687991; }
+
+    .ai-input-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 4px 1px;
+    }
+
+    .ai-input-footer .muted { font-size: 10px; }
+
+    .ai-answer {
+      display: none;
+      margin-top: 17px;
+      padding: 17px;
+      border: 1px solid #2a3b54;
+      border-radius: 10px;
+      background: #0b1320;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+      line-height: 1.9;
+      color: #cbd8eb;
+    }
+
+    .ai-answer.visible { display: block; }
+
+    .ai-bottom-note {
+      margin-top: 14px;
+      color: #8191a8;
+      font-size: 10px;
+    }
+
+    footer {
+      text-align: center;
+      color: #65748b;
+      font-size: 10px;
+      padding: 25px 10px 10px;
+    }
+
+
+    /* AI Incident Investigation */
+    .investigation-panel {
+      border-color: #344c70;
+      background:
+        radial-gradient(ellipse at 100% 0%, #31599a25, transparent 45%),
+        linear-gradient(145deg, #141e30, #0f1725);
+    }
+
+    .investigation-intro {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .investigation-icon {
+      flex: 0 0 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #2563eb, #6045bb);
+      font-size: 21px;
+    }
+
+    .investigation-intro h2 {
+      margin: 0 0 5px;
+      font-size: 16px;
+    }
+
+    .investigation-intro p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .investigation-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .investigation-state {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .investigation-state.success { color: var(--green); }
+    .investigation-state.warning { color: var(--yellow); }
+    .investigation-state.error { color: var(--red); }
+
+    .investigation-metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .investigation-metric {
+      min-width: 0;
+      padding: 15px;
+      background: #0b1321;
+      border: 1px solid #27364d;
+      border-radius: 10px;
+    }
+
+    .investigation-metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      margin-bottom: 8px;
+    }
+
+    .investigation-metric strong {
+      display: block;
+      font-size: 22px;
+      overflow-wrap: anywhere;
+    }
+
+    .investigation-subheading {
+      font-size: 12px;
+      font-weight: 750;
+      margin: 22px 0 10px;
+    }
+
+    .investigation-report {
+      display: none;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      padding: 18px;
+      border: 1px solid #2b3d56;
+      border-radius: 11px;
+      background: #0a111d;
+      color: #d4e0f1;
+      font-size: 12px;
+      line-height: 1.9;
+    }
+
+    .investigation-report.visible { display: block; }
+
+    .investigation-footnote {
+      margin-top: 14px;
+      color: #8293aa;
+      font-size: 10px;
+      line-height: 1.7;
+    }
+
+    @media (max-width: 850px) {
+      .investigation-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (min-width: 1500px) {
+      .content { padding-left: 42px; padding-right: 42px; }
+    }
+
+    @media (max-width: 1150px) {
+      .app { grid-template-columns: 200px minmax(0, 1fr); }
+      .content { padding: 25px 22px; }
+      .topbar { padding: 15px 22px; }
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .two-col { grid-template-columns: minmax(0, 1fr); }
+    }
+
+    @media (max-width: 700px) {
+      .app { grid-template-columns: 1fr; }
+
+      .sidebar {
+        padding: 14px 16px 10px;
+        gap: 14px;
+        border-right: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .brand { padding: 0 4px; }
+
+      .nav-label, .sidebar-bottom { display: none; }
+
+      .nav {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+
+      .nav a {
+        flex-shrink: 0;
+        min-height: 37px;
+        padding: 9px 11px;
+        font-size: 11px;
+      }
+
+      .nav-icon { font-size: 14px; width: auto; }
+
+      .topbar { padding: 13px 16px; min-height: 65px; }
+      .top-title { font-size: 14px; }
+      .breadcrumb { font-size: 10px; }
+      .api-status { padding: 7px; font-size: 0; }
+      .api-status .dot { width: 8px; height: 8px; }
+      .refresh-btn { padding: 9px; font-size: 11px; }
+
+      .content { padding: 23px 15px 30px; }
+      .page-heading { align-items: flex-start; }
+      .date-label { display: none; }
+      .metrics { gap: 10px; }
+      .metric-card { padding: 15px; }
+      .metric-value { font-size: 27px; }
+      .metric-label { font-size: 11px; }
+      .metric-icon { width: 30px; height: 30px; font-size: 14px; }
+      .panel { padding: 16px; }
+      .health-layout { gap: 15px; }
+      .gauge { width: 105px; height: 105px; }
+      .gauge-number { font-size: 25px; }
+      .health-copy h3 { font-size: 13px; }
+      .health-copy p { font-size: 10px; }
+      .ai-badge { display: none; }
+    }
+
+    @media (max-width: 390px) {
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .metric-card { padding: 12px; }
+      .metric-value { font-size: 24px; }
+      .health-layout { align-items: flex-start; flex-direction: column; }
+      .health-stats { width: 100%; }
+      .device-icon { width: 35px; height: 35px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+
+/* NetPilot interface history chart */
+.chart-card {
+  margin-bottom: 16px;
+}
+
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 18px 0;
+}
+
+.chart-toolbar select {
+  background: #0b1120;
+  color: #e5eaf4;
+  border: 1px solid #26344d;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font: inherit;
+  min-width: 180px;
+}
+
+.chart-legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.chart-container {
+  position: relative;
+  width: 100%;
+  min-height: 260px;
+}
+
+#interfaceChart {
+  display: block;
+  width: 100%;
+  height: 280px;
+}
+
+.chart-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.chart-stat {
+  padding: 15px;
+  background: #0b1120;
+  border: 1px solid #26344d;
+  border-radius: 10px;
+  min-width: 0;
+}
+
+.chart-stat-value {
+  font-size: 22px;
+  font-weight: 750;
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 520px) {
+  .chart-summary {
+    grid-template-columns: 1fr;
+  }
+
+  #interfaceChart {
+    height: 240px;
+  }
+}
+
+  </style>
+</head>
+
+<body>
+
+<section id="netpilot-cpu-history-panel" aria-label="CPU utilization history">
+  <style>
+    #netpilot-cpu-history-panel {
+      box-sizing: border-box;
+      margin: 24px auto;
+      padding: 22px;
+      width: min(1100px, calc(100% - 32px));
+      color: #e5edf7;
+      background: #101a2a;
+      border: 1px solid #263750;
+      border-radius: 16px;
+      font-family: system-ui, sans-serif;
+    }
+    #netpilot-cpu-history-panel * { box-sizing: border-box; }
+    #netpilot-cpu-history-panel .cpu-head {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 14px; margin-bottom: 18px;
+    }
+    #netpilot-cpu-history-panel .cpu-kicker {
+      color: #8ba4c5; font-size: 11px; letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+    #netpilot-cpu-history-panel h2 {
+      margin: 5px 0 0; font-size: 21px; color: #f4f8ff;
+    }
+    #netpilot-cpu-history-panel .cpu-current {
+      font-size: 30px; font-weight: 750; color: #67e8f9;
+    }
+    #netpilot-cpu-history-panel .cpu-muted {
+      color: #91a4bd; font-size: 12px;
+    }
+    #netpilot-cpu-history-panel .cpu-chart-wrap {
+      width: 100%; height: 260px; position: relative;
+    }
+    #netpilot-cpu-history-panel canvas {
+      display: block; width: 100%; height: 100%;
+    }
+    #netpilot-cpu-history-panel .cpu-footer {
+      display: flex; justify-content: space-between; gap: 12px;
+      flex-wrap: wrap; margin-top: 12px;
+    }
+    #netpilot-cpu-history-panel .cpu-status {
+      font-size: 12px; color: #9fb1c9;
+    }
+  </style>
+
+  <div class="cpu-head">
+    <div>
+      <div class="cpu-kicker">NetPilot / Performance telemetry</div>
+      <h2>CPU Utilization · MP-SW01</h2>
+      <div class="cpu-muted">Recorded from the Cisco device every monitor poll</div>
+    </div>
+    <div>
+      <div id="np-cpu-current" class="cpu-current">--%</div>
+      <div class="cpu-muted">Latest recorded reading</div>
+    </div>
+  </div>
+
+  <div class="cpu-chart-wrap">
+    <canvas id="np-cpu-chart" role="img"
+      aria-label="Historical CPU utilization line chart"></canvas>
+  </div>
+
+  <div class="cpu-footer">
+    <span id="np-cpu-summary" class="cpu-muted">Waiting for CPU history…</span>
+    <span id="np-cpu-updated" class="cpu-status">Not yet updated</span>
+  </div>
+</section>
+
+<div class="app">
+
+  <aside class="sidebar">
+    <a href="#overview" class="brand">
+      <div class="brand-icon">⌘</div>
+      <div>
+        <div class="brand-name"><span>NET</span>PILOT</div>
+        <div class="brand-sub">NETWORK INTELLIGENCE</div>
+      </div>
+    </a>
+
+    <div>
+      <div class="nav-label">Workspace</div>
+      <nav class="nav">
+        <a href="#overview" class="active"><span class="nav-icon">◫</span> Overview</a>
+        <a href="#devices"><span class="nav-icon">▣</span> Devices</a>
+        <a href="#health"><span class="nav-icon">◉</span> Diagnostics</a>
+        <a href="#monitoring"><span class="nav-icon">⌁</span> Monitoring</a>
+        <a href="#alerts"><span class="nav-icon">♧</span> Alerts <span class="nav-count" id="navAlertCount">—</span></a>
+      </nav>
+    </div>
+
+    <div>
+      <div class="nav-label">Intelligence</div>
+      <nav class="nav">
+        <a href="#assistant"><span class="nav-icon">✳</span> AI Assistant</a>
+        <a href="#ai-investigation"><span class="nav-icon">⌕</span> AI Investigation</a>
+      </nav>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="side-status">
+        <span class="dot"></span>
+        Monitoring service
+      </div>
+      <p>NetPilot collects read-only telemetry and surfaces diagnostic findings.</p>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <div>
+        <div class="breadcrumb">Workspace / <span style="color:#dce6f5">Overview</span></div>
+        <div class="top-title">Network Operations Center</div>
+      </div>
+
+      <div class="top-actions">
+        <div class="api-status" id="connection">
+          <span class="dot"></span> Connecting to API
+        </div>
+        <button class="refresh-btn" id="refresh" onclick="loadDashboard()">
+          ↻ &nbsp; Refresh
+        </button>
+      </div>
+    </header>
+
+    <main class="content" id="overview">
+      <section class="page-heading">
+        <div>
+          <div class="eyebrow">Operations overview</div>
+          <h1>Network at a glance</h1>
+          <p>Monitor device health, identify issues, and investigate your network.</p>
+        </div>
+        <div class="date-label" id="lastUpdated">Waiting for first update</div>
+      </section>
+
+      <section class="metrics">
+        <article class="metric-card">
+          <div class="metric-top">
+            <div class="metric-label">Configured devices</div>
+            <div class="metric-icon">▣</div>
+          </div>
+          <div class="metric-value" id="deviceCount">1</div>
+          <div class="metric-foot">Devices in inventory</div>
+          <div class="metric-line"></div>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-top">
+            <div class="metric-label">Network health</div>
+            <div class="metric-icon green-bg">◉</div>
+          </div>
+          <div class="metric-value green" id="healthScore">—</div>
+          <div class="metric-foot">Diagnostic health score</div>
+          <div class="metric-line" style="background:linear-gradient(90deg,#4ade8080,transparent)"></div>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-top">
+            <div class="metric-label">Diagnostic findings</div>
+            <div class="metric-icon yellow-bg">⚑</div>
+          </div>
+          <div class="metric-value yellow" id="issueCount">—</div>
+          <div class="metric-foot">Current reported findings</div>
+          <div class="metric-line" style="background:linear-gradient(90deg,#fbbf2480,transparent)"></div>
+        </article>
+
+        <article class="metric-card">
+          <div class="metric-top">
+            <div class="metric-label">Switch CPU</div>
+            <div class="metric-icon">⌁</div>
+          </div>
+          <div class="metric-value blue" id="cpuUsage">—</div>
+          <div class="metric-foot">Latest reported utilization</div>
+          <div class="metric-line"></div>
+        </article>
+      </section>
+
+      <section class="two-col">
+        <article class="panel" id="devices">
+          <div class="panel-heading">
+            <div>
+              <h2>Device inventory</h2>
+              <p>Availability and latest device telemetry</p>
+            </div>
+            <span class="tag"><span class="dot" style="background:var(--green)"></span> Live status</span>
+          </div>
+          <div id="devicesList">
+            <div class="empty-state">Loading device information…</div>
+          </div>
+          <div class="panel-footer">Inventory is based on devices configured in this dashboard.</div>
+        </article>
+
+        <article class="panel" id="health">
+          <div class="panel-heading">
+            <div>
+              <h2>Network health</h2>
+              <p>Summary of current diagnostic results</p>
+            </div>
+            <span class="tag">Diagnostics</span>
+          </div>
+
+          <div class="health-layout">
+            <div class="gauge" id="healthGauge" style="--health-angle:0deg">
+              <div class="gauge-center">
+                <div class="gauge-number" id="gaugeNumber">—</div>
+                <div class="gauge-label">HEALTH SCORE</div>
+              </div>
+            </div>
+            <div class="health-copy">
+              <h3 id="healthLabel">Awaiting telemetry</h3>
+              <p id="healthDescription">The health assessment will appear after diagnostics complete.</p>
+            </div>
+          </div>
+
+          <div class="health-stats">
+            <div class="health-stat">
+              <span>Findings</span>
+              <strong id="healthFindings">—</strong>
+            </div>
+            <div class="health-stat">
+              <span>Device CPU</span>
+              <strong id="healthCpu">—</strong>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="two-col">
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <h2>Diagnostic findings</h2>
+              <p>Evidence returned by the diagnostic engine</p>
+            </div>
+            <span class="tag">Read-only</span>
+          </div>
+          <div id="diagnostics">
+            <div class="empty-state">Loading diagnostic results…</div>
+          </div>
+        </article>
+
+        <article class="panel" id="alerts">
+          <div class="panel-heading">
+            <div>
+              <h2>Active alerts</h2>
+              <p>Events recorded by the monitoring process</p>
+            </div>
+            <span class="tag" id="alertCount">Loading</span>
+          </div>
+          <div id="alertsList">
+            <div class="empty-state">Loading alerts…</div>
+          </div>
+          <div class="panel-footer">
+            Recorded alerts may remain visible after the underlying issue is resolved.
+          </div>
+        </article>
+      </section>
+
+      <section class="panel" id="monitoring">
+        <div class="panel-heading">
+          <div>
+            <h2>Interface error history</h2>
+            <p>Recent snapshots of interface counters stored by NetPilot</p>
+          </div>
+          <span class="tag" id="historyStatus">Loading history</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Interface</th>
+                <th>Input errors</th>
+                <th>CRC errors</th>
+                <th>Output errors</th>
+                <th>Recorded at</th>
+              </tr>
+            </thead>
+            <tbody id="historyRows">
+              <tr><td colspan="5" class="muted">Loading history…</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel-footer">
+          These are cumulative counter snapshots, not necessarily new errors.
+          Compare successive readings to identify increasing counters.
+        </div>
+      </section>
+
+
+      <section class="panel investigation-panel" id="ai-investigation">
+        <div class="panel-heading">
+          <div class="investigation-intro">
+            <div class="investigation-icon">⌕</div>
+            <div>
+              <h2>AI Incident Investigation</h2>
+              <p>Combines recorded CPU history, rule-based anomaly detection, and device diagnostics into an investigation report.</p>
+            </div>
+          </div>
+          <span class="ai-badge">LOCAL AI · LLAMA 3.2</span>
+        </div>
+
+        <div class="investigation-actions">
+          <button class="primary-btn" id="investigateButton" onclick="runAIInvestigation()">
+            ⌕ &nbsp; Investigate MP-SW01
+          </button>
+          <span class="investigation-state" id="investigationState" aria-live="polite">
+            Ready to investigate
+          </span>
+        </div>
+
+        <div class="investigation-metrics">
+          <div class="investigation-metric">
+            <span>Latest CPU</span>
+            <strong class="blue" id="investigationCpu">—</strong>
+          </div>
+          <div class="investigation-metric">
+            <span>CPU baseline</span>
+            <strong id="investigationBaseline">—</strong>
+          </div>
+          <div class="investigation-metric">
+            <span>Readings analyzed</span>
+            <strong id="investigationReadings">—</strong>
+          </div>
+          <div class="investigation-metric">
+            <span>Detected anomalies</span>
+            <strong id="investigationAnomalyCount">—</strong>
+          </div>
+        </div>
+
+        <h3 class="investigation-subheading">Rule-based anomaly findings</h3>
+        <div id="investigationFindings">
+          <div class="empty-state">
+            Run an investigation to load the latest CPU anomaly analysis.
+          </div>
+        </div>
+
+        <h3 class="investigation-subheading">AI investigation report</h3>
+        <div id="investigationReport" class="investigation-report" aria-live="polite"></div>
+
+        <div class="investigation-footnote">
+          Evidence-based assistance only. Findings are indicators, not proof of a fault.
+          NetPilot does not automatically change device configuration.
+        </div>
+      </section>
+
+      <section class="panel ai-panel" id="assistant">
+        <div class="panel-heading">
+          <div class="ai-heading">
+            <div class="ai-icon">✳</div>
+            <div>
+              <h2>NetPilot AI</h2>
+              <p>Network troubleshooting assistant powered by your local AI model</p>
+            </div>
+          </div>
+          <span class="ai-badge">LOCAL AI</span>
+        </div>
+
+        <div class="suggestions">
+          <button class="suggestion" onclick="useSuggestion('Analyze MP-SW01 and summarize its current health.')">Analyze device health</button>
+          <button class="suggestion" onclick="useSuggestion('Explain what increasing CRC errors could indicate and how to investigate them safely.')">Investigate interface errors</button>
+          <button class="suggestion" onclick="useSuggestion('What read-only checks should I run first when troubleshooting a network issue?')">Suggest troubleshooting steps</button>
+        </div>
+
+        <div class="ai-input-wrap">
+          <textarea
+            id="aiQuestion"
+            maxlength="1000"
+            placeholder="Ask a question about your network…"
+          ></textarea>
+          <div class="ai-input-footer">
+            <span class="muted" id="questionCount">0 / 1000 characters</span>
+            <button class="primary-btn" id="askButton" onclick="askNetPilot()">
+              ✳ &nbsp; Analyze with AI
+            </button>
+          </div>
+        </div>
+
+        <div id="aiAnswer" class="ai-answer" aria-live="polite"></div>
+        <div class="ai-bottom-note">Read-only assistance · Recommendations are not applied automatically.</div>
+      </section>
+
+      <footer>NETPILOT &nbsp;·&nbsp; NETWORK OPERATIONS &amp; INTELLIGENCE</footer>
+    </main>
+  </div>
+</div>
+
+<script>
+  const deviceNames = ["MP-SW01"];
+  let dashboardLoading = false;
+
+  async function getJSON(path) {
+    const response = await fetch(path, { cache: "no-store" });
+
+    if (!response.ok) {
+      throw new Error(`${path} returned HTTP ${response.status}`);
+    }
+
+    return response.json();
+  }
+
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, char => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    })[char]);
+  }
+
+  function formatTime(value) {
+    if (!value) return "—";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString();
+  }
+
+  function useSuggestion(value) {
+    const input = document.getElementById("aiQuestion");
+    input.value = value;
+    updateQuestionCount();
+    input.focus();
+  }
+
+  function updateQuestionCount() {
+    const input = document.getElementById("aiQuestion");
+    document.getElementById("questionCount").textContent =
+      `${input.value.length} / 1000 characters`;
+  }
+
+  document.getElementById("aiQuestion").addEventListener("input", updateQuestionCount);
+
+  async function loadHistory(deviceName) {
+    const status = document.getElementById("historyStatus");
+    const rows = document.getElementById("historyRows");
+
+    try {
+      const data = await getJSON(
+        `/monitoring/${encodeURIComponent(deviceName)}/history?limit=30`
+      );
+
+      const history = data.history || [];
+      status.textContent = `${history.length} snapshots`;
+
+      if (!history.length) {
+        rows.innerHTML = '<tr><td colspan="5" class="muted">No snapshots recorded yet. Leave the monitor running to collect readings.</td></tr>';
+        return;
+      }
+
+      rows.innerHTML = history.map(item => `
+        <tr>
+          <td><strong>${escapeHTML(item.interface)}</strong></td>
+          <td>${escapeHTML(item.input_errors)}</td>
+          <td>${escapeHTML(item.crc_errors)}</td>
+          <td>${escapeHTML(item.output_errors)}</td>
+          <td>${escapeHTML(formatTime(item.captured_at))}</td>
+        </tr>
+      `).join("");
+    } catch (error) {
+      status.textContent = "Unavailable";
+      rows.innerHTML = `<tr><td colspan="5" class="muted">${escapeHTML(error.message)}</td></tr>`;
+    }
+  }
+
+  async function loadAlerts(deviceName) {
+    const list = document.getElementById("alertsList");
+    const count = document.getElementById("alertCount");
+    const navCount = document.getElementById("navAlertCount");
+
+    try {
+      const data = await getJSON(
+        `/alerts/${encodeURIComponent(deviceName)}?limit=50`
+      );
+
+      const alerts = data.alerts || [];
+      count.textContent = `${alerts.length} recorded`;
+      navCount.textContent = alerts.length;
+
+      if (!alerts.length) {
+        list.innerHTML = '<div class="empty-state"><span class="empty-icon">✓</span>No alerts recorded.<br>Detected monitoring issues will appear here.</div>';
+        return;
+      }
+
+      list.innerHTML = alerts.map(alert => {
+        const severity = String(alert.severity || "warning").toLowerCase();
+        const critical = severity === "critical";
+        const info = severity === "info";
+        const color = critical ? "var(--red)" : info ? "var(--blue)" : "var(--yellow)";
+
+        return `
+          <div class="issue ${critical ? "critical" : info ? "info" : ""}">
+            <div class="issue-title">
+              <span style="color:${color}">${escapeHTML(severity.toUpperCase())}</span>
+              &nbsp;·&nbsp; ${escapeHTML(alert.category || "general")}
+            </div>
+            <p>Device: ${escapeHTML(alert.device || deviceName)}</p>
+            <p>${escapeHTML(alert.message || "No message provided.")}</p>
+            <p>Recorded: ${escapeHTML(formatTime(alert.created_at))}</p>
+          </div>
+        `;
+      }).join("");
+    } catch (error) {
+      count.textContent = "Unavailable";
+      list.innerHTML = `<div class="empty-state">${escapeHTML(error.message)}</div>`;
+      navCount.textContent = "!";
+    }
+  }
+
+  async function loadDashboard() {
+    if (dashboardLoading) return;
+    dashboardLoading = true;
+
+    const button = document.getElementById("refresh");
+    const connection = document.getElementById("connection");
+
+    button.disabled = true;
+    button.textContent = "↻ Refreshing";
+    connection.innerHTML = '<span class="dot"></span> Fetching live data';
+    connection.classList.remove("error");
+
+    try {
+      const results = await Promise.all(deviceNames.map(async name => {
+        const [device, diagnostics] = await Promise.all([
+          getJSON(`/devices/${encodeURIComponent(name)}`),
+          getJSON(`/devices/${encodeURIComponent(name)}/diagnostics`)
+        ]);
+        return { name, device, diagnostics };
+      }));
+
+      document.getElementById("deviceCount").textContent = results.length;
+
+      const average = Math.round(
+        results.reduce((sum, item) =>
+          sum + Number(item.diagnostics.health_score || 0), 0
+        ) / results.length
+      );
+
+      const score = document.getElementById("healthScore");
+      score.textContent = `${average}%`;
+      score.className = "metric-value " +
+        (average >= 90 ? "green" : average >= 70 ? "yellow" : "red");
+
+      document.getElementById("gaugeNumber").textContent = `${average}%`;
+      document.getElementById("healthGauge").style.setProperty(
+        "--health-angle", `${Math.max(0, Math.min(100, average)) * 3.6}deg`
+      );
+
+      const healthText = average >= 90 ? "Healthy" : average >= 70 ? "Needs attention" : "Degraded";
+      document.getElementById("healthLabel").textContent = healthText;
+      document.getElementById("healthLabel").className =
+        average >= 90 ? "green" : average >= 70 ? "yellow" : "red";
+
+      document.getElementById("healthDescription").textContent =
+        average >= 90
+          ? "Current diagnostic rules report a healthy device state."
+          : average >= 70
+            ? "Review the reported findings to identify areas needing attention."
+            : "Review device availability and diagnostic findings.";
+
+      const findingsCount = results.reduce((sum, item) =>
+        sum + Number(item.diagnostics.findings_count || 0), 0);
+
+      document.getElementById("issueCount").textContent = findingsCount;
+      document.getElementById("healthFindings").textContent = findingsCount;
+
+      const cpu = results[0]?.device.cpu;
+      document.getElementById("cpuUsage").textContent =
+        cpu == null ? "N/A" : `${cpu}%`;
+      document.getElementById("healthCpu").textContent =
+        cpu == null ? "N/A" : `${cpu}%`;
+
+      document.getElementById("devicesList").innerHTML = results.map(item => {
+        const online = String(item.device.status).toLowerCase() === "online";
+        const health = item.diagnostics.health || "unknown";
+        const healthScore = item.diagnostics.health_score ?? "—";
+        const pillClass = online ? "" : "offline";
+        const healthClass = health === "healthy" ? "green" :
+          health === "warning" ? "yellow" : "red";
+
+        return `
+          <div class="device">
+            <div class="device-icon">▣</div>
+            <div class="device-main">
+              <div class="device-name">${escapeHTML(item.name)}</div>
+              <div class="device-meta">CPU ${escapeHTML(item.device.cpu ?? "N/A")}% &nbsp;·&nbsp; Memory ${escapeHTML(item.device.memory ?? "N/A")}%</div>
+              <div class="device-meta" style="margin-top:5px">Uptime: ${escapeHTML(item.device.uptime ?? "Not reported")}</div>
+            </div>
+            <div class="device-right">
+              <span class="status-pill ${pillClass}">
+                <span class="dot" style="background:${online ? "var(--green)" : "var(--red)"}"></span>
+                ${online ? "Online" : escapeHTML(item.device.status || "Unknown")}
+              </span>
+              <div class="health-mini ${healthClass}">${escapeHTML(health)} · ${escapeHTML(healthScore)}%</div>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      const findings = results.flatMap(item =>
+        (item.diagnostics.findings || []).map(finding => ({
+          device: item.name, ...finding
+        }))
+      );
+
+      document.getElementById("diagnostics").innerHTML = findings.length
+        ? findings.map(finding => `
+            <div class="issue ${
+              finding.severity === "critical" ? "critical" :
+              finding.severity === "info" ? "info" : ""
+            }">
+              <div class="issue-title">${escapeHTML(finding.issue || "Finding")}</div>
+              <p>Device: ${escapeHTML(finding.device)}</p>
+              <p>Severity: ${escapeHTML(finding.severity || "Unspecified")}</p>
+              <p>Evidence: ${escapeHTML(finding.evidence || "No evidence detail supplied.")}</p>
+            </div>
+          `).join("")
+        : '<div class="empty-state"><span class="empty-icon">✓</span>No findings reported by the current diagnostic rules.</div>';
+
+      connection.innerHTML = '<span class="dot"></span> API connected';
+      document.getElementById("lastUpdated").textContent =
+        "Last updated " + new Date().toLocaleTimeString();
+
+    } catch (error) {
+      connection.innerHTML = '<span class="dot"></span> API unavailable';
+      connection.classList.add("error");
+
+      document.getElementById("devicesList").innerHTML =
+        `<div class="empty-state">${escapeHTML(error.message)}<br>Check that the NetPilot API is running.</div>`;
+
+      document.getElementById("diagnostics").innerHTML =
+        '<div class="empty-state">Diagnostics unavailable until the API responds.</div>';
+
+      document.getElementById("healthScore").textContent = "—";
+      document.getElementById("gaugeNumber").textContent = "—";
+      document.getElementById("healthLabel").textContent = "Awaiting telemetry";
+      document.getElementById("issueCount").textContent = "—";
+      document.getElementById("cpuUsage").textContent = "—";
+      document.getElementById("healthFindings").textContent = "—";
+      document.getElementById("healthCpu").textContent = "—";
+
+    } finally {
+      button.disabled = false;
+      button.textContent = "↻  Refresh";
+      dashboardLoading = false;
+    }
+
+    await Promise.all([
+      loadHistory(deviceNames[0]),
+      loadAlerts(deviceNames[0])
+    ]);
+  }
+
+
+  async function runAIInvestigation() {
+    const button = document.getElementById("investigateButton");
+    const state = document.getElementById("investigationState");
+    const report = document.getElementById("investigationReport");
+    const findings = document.getElementById("investigationFindings");
+
+    button.disabled = true;
+    button.textContent = "Investigating…";
+    state.className = "investigation-state";
+    state.textContent = "Collecting diagnostics and consulting local AI…";
+    report.classList.add("visible");
+    report.textContent = "Investigation in progress. This may take a little while.";
+    findings.innerHTML = '<div class="empty-state">Analyzing recorded CPU readings…</div>';
+
+    try {
+      const response = await fetch(
+        "/investigate-anomalies/MP-SW01",
+        { cache: "no-store" }
+      );
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          typeof data.detail === "string"
+            ? data.detail
+            : "Investigation failed with HTTP " + response.status
+        );
+      }
+
+      const cpu = data.cpu_analysis || {};
+      const anomalies = Array.isArray(cpu.anomalies) ? cpu.anomalies : [];
+      const status = String(cpu.status || "unknown").toLowerCase();
+
+      document.getElementById("investigationCpu").textContent =
+        cpu.latest_cpu_percent == null
+          ? "N/A"
+          : Number(cpu.latest_cpu_percent).toFixed(1) + "%";
+
+      document.getElementById("investigationBaseline").textContent =
+        cpu.baseline_cpu_percent == null
+          ? "N/A"
+          : Number(cpu.baseline_cpu_percent).toFixed(1) + "%";
+
+      document.getElementById("investigationReadings").textContent =
+        cpu.readings_analyzed ?? "—";
+
+      const countEl = document.getElementById("investigationAnomalyCount");
+      countEl.textContent = cpu.anomaly_count ?? anomalies.length;
+      countEl.className =
+        (status === "critical" || status === "warning" || anomalies.length)
+          ? "red"
+          : "green";
+
+      if (!anomalies.length) {
+        findings.innerHTML = `
+          <div class="empty-state">
+            <span class="empty-icon">✓</span>
+            No CPU anomalies were detected by the current rules.<br>
+            This does not guarantee that every network function is healthy.
+          </div>
+        `;
+      } else {
+        findings.innerHTML = anomalies.map(item => {
+          const title = item.title || item.type || item.rule || "CPU anomaly";
+          const detail = item.description || item.message || item.details ||
+            JSON.stringify(item, null, 2);
+
+          return `
+            <div class="issue ${
+              status === "critical" ? "critical" : ""
+            }">
+              <div class="issue-title">${escapeHTML(title)}</div>
+              <p>${escapeHTML(detail)}</p>
+            </div>
+          `;
+        }).join("");
+      }
+
+      const aiReport = data.ai_report || "The AI returned no report.";
+      report.textContent = aiReport;
+
+      state.className = "investigation-state " +
+        (status === "critical" || status === "warning" || anomalies.length
+          ? "warning" : "success");
+
+      state.textContent =
+        "Investigation completed · " +
+        (data.model || "Local AI") +
+        " · " + (cpu.status || "status unknown");
+
+      document.getElementById("lastUpdated").textContent =
+        "Investigation completed " + new Date().toLocaleTimeString();
+
+    } catch (error) {
+      state.className = "investigation-state error";
+      state.textContent = "Investigation failed";
+      report.textContent =
+        "Could not complete the investigation.\n\n" +
+        error.message +
+        "\n\nCheck the NetPilot API terminal for server-side errors.";
+      findings.innerHTML = `
+        <div class="empty-state">
+          Anomaly findings could not be loaded. Check that the API and local AI service are running.
+        </div>
+      `;
+    } finally {
+      button.disabled = false;
+      button.innerHTML = "⌕ &nbsp; Investigate MP-SW01";
+    }
+  }
+
+  async function askNetPilot() {
+    const question = document.getElementById("aiQuestion").value.trim();
+    const answer = document.getElementById("aiAnswer");
+    const button = document.getElementById("askButton");
+
+    answer.classList.add("visible");
+
+    if (!question) {
+      answer.textContent = "Please enter a networking question.";
+      return;
+    }
+
+    button.disabled = true;
+    button.textContent = "Analyzing…";
+    answer.textContent = "Consulting the configured AI model…";
+
+    try {
+      const response = await fetch("/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || "AI request failed.");
+      }
+
+      answer.textContent =
+        (data.answer || "The AI returned no answer.") +
+        "\n\nDevices analyzed: " +
+        (data.devices_analyzed || []).join(", ") +
+        "\nData source: " + (data.data_source || "Not specified");
+
+    } catch (error) {
+      answer.textContent = "Request failed: " + error.message;
+    } finally {
+      button.disabled = false;
+      button.innerHTML = "✳ &nbsp; Analyze with AI";
+    }
+  }
+
+  document.getElementById("aiQuestion").addEventListener("keydown", event => {
+    if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+      askNetPilot();
+    }
+  });
+
+  loadDashboard();
+  setInterval(loadDashboard, 60000);
+</script>
+
+<script>
+(() => {
+  const panel = document.getElementById("netpilot-cpu-history-panel");
+  const canvas = document.getElementById("np-cpu-chart");
+  if (!panel || !canvas) return;
+
+  const currentEl = document.getElementById("np-cpu-current");
+  const summaryEl = document.getElementById("np-cpu-summary");
+  const updatedEl = document.getElementById("np-cpu-updated");
+  const ctx = canvas.getContext("2d");
+
+  function drawChart(history) {
+    const width = canvas.clientWidth || 600;
+    const height = canvas.clientHeight || 260;
+    const ratio = window.devicePixelRatio || 1;
+
+    canvas.width = Math.round(width * ratio);
+    canvas.height = Math.round(height * ratio);
+    ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    ctx.clearRect(0, 0, width, height);
+
+    const left = 42, right = 14, top = 16, bottom = 30;
+    const chartW = width - left - right;
+    const chartH = height - top - bottom;
+
+    ctx.font = "11px system-ui";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+
+    [0, 25, 50, 75, 100].forEach(value => {
+      const y = top + chartH * (1 - value / 100);
+      ctx.beginPath();
+      ctx.strokeStyle = "#263750";
+      ctx.lineWidth = 1;
+      ctx.moveTo(left, y);
+      ctx.lineTo(width - right, y);
+      ctx.stroke();
+      ctx.fillStyle = "#91a4bd";
+      ctx.fillText(value + "%", left - 8, y);
+    });
+
+    if (!history.length) {
+      ctx.textAlign = "center";
+      ctx.fillStyle = "#91a4bd";
+      ctx.fillText("No CPU history yet. Start the monitor to collect readings.",
+        width / 2, height / 2);
+      return;
+    }
+
+    const points = history.map((item, index) => ({
+      x: left + (history.length === 1 ? chartW / 2 :
+        index * chartW / (history.length - 1)),
+      y: top + chartH * (1 - Number(item.cpu_percent) / 100),
+      value: Number(item.cpu_percent)
+    }));
+
+    // Subtle area fill under the CPU line.
+    ctx.beginPath();
+    ctx.moveTo(points[0].x, top + chartH);
+    points.forEach(point => ctx.lineTo(point.x, point.y));
+    ctx.lineTo(points[points.length - 1].x, top + chartH);
+    ctx.closePath();
+    ctx.fillStyle = "rgba(34, 211, 238, 0.10)";
+    ctx.fill();
+
+    ctx.beginPath();
+    points.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    ctx.strokeStyle = "#22d3ee";
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+
+    points.forEach(point => {
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "#67e8f9";
+      ctx.fill();
+    });
+
+    ctx.textAlign = "left";
+    ctx.textBaseline = "top";
+    ctx.fillStyle = "#91a4bd";
+    const firstTime = new Date(history[0].captured_at);
+    const lastTime = new Date(history[history.length - 1].captured_at);
+    if (!Number.isNaN(firstTime.getTime())) {
+      ctx.fillText(firstTime.toLocaleTimeString([], {
+        hour: "2-digit", minute: "2-digit"
+      }), left, top + chartH + 10);
+    }
+    const lastLabel = !Number.isNaN(lastTime.getTime())
+      ? lastTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      : "";
+    ctx.textAlign = "right";
+    ctx.fillText(lastLabel, width - right, top + chartH + 10);
+  }
+
+  async function refreshCpuHistory() {
+    try {
+      const response = await fetch(
+        "/monitoring/MP-SW01/cpu-history?limit=100",
+        { cache: "no-store" }
+      );
+      if (!response.ok) {
+        throw new Error("CPU history API returned HTTP " + response.status);
+      }
+
+      const payload = await response.json();
+      const newestFirst = Array.isArray(payload.history) ? payload.history : [];
+      const history = newestFirst
+        .filter(item => Number.isFinite(Number(item.cpu_percent)))
+        .reverse();
+
+      drawChart(history);
+
+      if (history.length) {
+        const values = history.map(item => Number(item.cpu_percent));
+        const latest = values[values.length - 1];
+        const peak = Math.max(...values);
+        const average = values.reduce((sum, value) => sum + value, 0) / values.length;
+
+        currentEl.textContent = latest.toFixed(1) + "%";
+        summaryEl.textContent =
+          history.length + " readings · Peak " + peak.toFixed(1) +
+          "% · Average " + average.toFixed(1) + "%";
+      } else {
+        currentEl.textContent = "--%";
+        summaryEl.textContent =
+          "No readings stored yet. Start the background monitor.";
+      }
+
+      updatedEl.textContent = "Updated " + new Date().toLocaleTimeString();
+    } catch (error) {
+      updatedEl.textContent = "Could not load CPU history";
+      summaryEl.textContent = error.message;
+      console.error("NetPilot CPU chart:", error);
+    }
+  }
+
+  refreshCpuHistory();
+  window.setInterval(refreshCpuHistory, 60000);
+  window.addEventListener("resize", () => {
+    // Re-fetch to redraw at the new canvas size.
+    refreshCpuHistory();
+  });
+})();
+</script>
+
+</body>
+</html>

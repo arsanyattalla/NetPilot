@@ -1,0 +1,115 @@
+from pydantic import BaseModel, Field
+from counter_history import get_recent_history
+from network import get_interface_status, get_vlan_info
+from fastapi import HTTPException
+from requests.exceptions import RequestException
+from agent import ask_netpilot
+from fastapi.responses import FileResponse
+from pathlib import Path
+from cisco import CiscoDeviceError
+from diagnostics import analyze_device
+from fastapi import FastAPI
+from alerts import get_alerts
+from network import (
+    get_device_status,
+    get_interface_status,
+    get_vlan_info
+)
+
+app = FastAPI(
+    title="NetPilot",
+    description="AI Network Operations Assistant",
+    version="0.1.0"
+)
+def run_network_request(function, device_name):
+    try:
+        return function(device_name)
+    except CiscoDeviceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+@app.get("/", response_class=FileResponse)
+def home():
+    dashboard = (
+        Path(__file__).resolve().parent.parent
+        / "frontend"
+        / "index.html"
+    )
+    return FileResponse(dashboard)
+
+@app.get("/health")
+def health():
+
+    return {
+        "status": "healthy"
+    }
+
+
+@app.get("/devices/{device_name}")
+def device_status(device_name: str):
+    return run_network_request(get_device_status, device_name)
+
+
+@app.get("/devices/{device_name}/interfaces")
+def device_interfaces(device_name: str):
+    return run_network_request(get_interface_status, device_name)
+
+
+@app.get("/devices/{device_name}/vlans")
+def device_vlans(device_name: str):
+    return run_network_request(get_vlan_info, device_name)
+
+
+
+@app.get("/devices/{device_name}/diagnostics")
+def device_diagnostics(device_name: str):
+    return analyze_device(device_name)
+
+
+
+
+
+class AskRequest(BaseModel):
+    question: str = Field(min_length=1, max_length=1000)
+
+
+@app.post("/ask")
+def ask(request: AskRequest):
+    try:
+        return ask_netpilot(request.question)
+    except CiscoDeviceError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except RequestException:
+        raise HTTPException(
+            status_code=503,
+            detail="Could not reach the local AI model. Check that Ollama is running and the model is installed."
+        )
+
+
+@app.get("/monitoring/{device_name}/history")
+def monitoring_history(device_name: str, limit: int = 100):
+    if limit < 1 or limit > 500:
+        raise HTTPException(
+            status_code=400,
+            detail="Limit must be between 1 and 500."
+        )
+
+    return {
+        "device": device_name,
+        "limit": limit,
+        "history": get_recent_history(device_name, limit)
+    }
+
+@app.get("/alerts/{device_name}")
+def device_alerts(device_name: str, limit: int = 50):
+    if limit < 1 or limit > 200:
+        raise HTTPException(
+            status_code=400,
+            detail="Limit must be between 1 and 200.",
+        )
+
+    return {
+        "device": device_name,
+        "alerts": get_alerts(device_name, limit),
+    }

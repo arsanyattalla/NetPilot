@@ -1,0 +1,6 @@
+fastapi
+uvicorn[standard]
+netmiko
+python-dotenv
+requests
+pydantic

@@ -1,0 +1,138 @@
+
+import asyncio
+import logging
+import os
+from datetime import datetime, timezone
+
+from alerts import create_alert
+from network import get_device_status, get_interface_status
+from counter_history import (
+    record_cpu_snapshot,
+    record_interface_snapshot,
+)
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
+logger = logging.getLogger("netpilot.monitor")
+
+POLL_INTERVAL = max(
+    10,
+    int(os.getenv("NETPILOT_POLL_INTERVAL", "60")),
+)
+DEVICE_NAMES = ["MP-SW01"]
+
+
+async def poll_device(device_name: str):
+    try:
+        device = await asyncio.to_thread(
+            get_device_status, device_name
+        )
+
+        # Record only real, valid CPU readings returned by the device.
+        cpu = device.get("cpu")
+        cpu_record = None
+
+        if (
+            isinstance(cpu, (int, float))
+            and not isinstance(cpu, bool)
+            and 0 <= cpu <= 100
+        ):
+            cpu_record = await asyncio.to_thread(
+                record_cpu_snapshot,
+                device_name,
+                cpu,
+            )
+
+        interface_data = await asyncio.to_thread(
+            get_interface_status, device_name
+        )
+
+        interfaces = interface_data.get("interfaces", [])
+        history = await asyncio.to_thread(
+            record_interface_snapshot,
+            device_name,
+            interfaces,
+        )
+
+        increasing = [
+            item for item in history
+            if item["status"] == "increasing"
+        ]
+
+        logger.info(
+            "Poll complete | device=%s | status=%s | cpu=%s | "
+            "cpu_saved=%s | interfaces=%s | increasing_interfaces=%s | time=%s",
+            device_name,
+            device.get("status"),
+            cpu,
+            cpu_record is not None,
+            len(interfaces),
+            len(increasing),
+            datetime.now(timezone.utc).isoformat(),
+        )
+
+        for item in increasing:
+            deltas = item["new_errors_since_previous_poll"]
+
+            logger.warning(
+                "New interface errors | device=%s | interface=%s | deltas=%s",
+                device_name,
+                item["interface"],
+                deltas,
+            )
+
+            create_alert(
+                device=device_name,
+                severity="warning",
+                category="interface_errors",
+                message=(
+                    f"{item['interface']} reported new errors: {deltas}"
+                ),
+            )
+
+        # Keep the existing high-CPU alert threshold.
+        if isinstance(cpu, (int, float)) and not isinstance(cpu, bool):
+            if cpu >= 85:
+                create_alert(
+                    device=device_name,
+                    severity="critical",
+                    category="high_cpu",
+                    message=f"Device CPU usage is high: {cpu}%",
+                )
+
+    except Exception as exc:
+        logger.exception("Polling failed for device %s", device_name)
+
+        # Store useful error details, avoiding credentials in the alert.
+        error_detail = " ".join(str(exc).split())[:300]
+        create_alert(
+            device=device_name,
+            severity="critical",
+            category="connectivity",
+            message=(
+                f"Device polling failed: {type(exc).__name__}"
+                + (f": {error_detail}" if error_detail else "")
+            ),
+        )
+
+
+async def main():
+    logger.info(
+        "NetPilot monitor started; interval=%s seconds",
+        POLL_INTERVAL,
+    )
+
+    while True:
+        for device_name in DEVICE_NAMES:
+            await poll_device(device_name)
+
+        await asyncio.sleep(POLL_INTERVAL)
+
+
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info("NetPilot monitor stopped")
